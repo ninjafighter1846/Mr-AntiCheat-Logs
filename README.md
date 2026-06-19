@@ -1,21 +1,28 @@
 --====================================================================================================================================
--- MR ANTICHEAT LOGS (EXPLOIT-COMPATIBLE VERSION)
+-- MR ANTICHEAT LOGS (PLAYER-GUI HIGH COMPATIBILITY VERSION)
 --====================================================================================================================================
 local Players = game:GetService("Players")
-local CoreGui = game:GetService("CoreGui")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 
--- Altes GUI sauber entfernen
-if CoreGui:FindFirstChild("MrAntiCheat_MasterSuite") then 
-	CoreGui["MrAntiCheat_MasterSuite"]:Destroy() 
+local localPlayer = Players.LocalPlayer
+local playerGui = localPlayer:WaitForChild("PlayerGui")
+
+-- Generiert einen zufälligen Namen, damit In-Game-Anticheats das GUI nicht finden
+local randomName = "MAC_" .. tostring(math.random(100000, 999999))
+
+-- Altes GUI löschen (sucht nach dem alten internen Namen)
+for _, child in pairs(playerGui:GetChildren()) do
+	if child:IsA("ScreenGui") and (child.Name == "MrAntiCheat_MasterSuite" or string.match(child.Name, "^MAC_")) then
+		child:Destroy()
+	end
 end
 
--- 1. BASE DESIGN INTERFACE
+-- 1. BASE DESIGN INTERFACE (Injected into PlayerGui)
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "MrAntiCheat_MasterSuite"
+ScreenGui.Name = randomName
 ScreenGui.ResetOnSpawn = false
-ScreenGui.Parent = CoreGui
+ScreenGui.Parent = playerGui
 
 local MainFrame = Instance.new("Frame")
 MainFrame.Size = UDim2.new(0, 440, 0, 320)
@@ -159,7 +166,7 @@ end
 -- DETEKTIONEN
 --====================================================================================================================================
 local function monitor(player)
-	if player == Players.LocalPlayer then return end
+	if player == localPlayer then return end
 	
 	player.Chatted:Connect(function(msg)
 		local l = string.lower(msg)
@@ -228,7 +235,7 @@ local function monitor(player)
 					if d.esp and delta <= 45 then d.esp.TextColor3 = Color3.fromRGB(0, 255, 150) end
 				end
 				
-				local lChar = Players.LocalPlayer.Character
+				local lChar = localPlayer.Character
 				if lChar and lChar:FindFirstChild("HumanoidRootPart") and d.esp then
 					local realDist = (lChar.HumanoidRootPart.Position - cPos).Magnitude
 					d.esp.Text = player.Name .. " [" .. math.floor(realDist) .. "m]"
@@ -265,4 +272,4 @@ task.spawn(function()
 	end
 end)
 
-addLog("Sensoren geladen. Überwachung läuft.", Color3.fromRGB(0, 190, 255), "[SYSTEM]")
+addLog("Sensoren via PlayerGui geladen. Überwachung läuft.", Color3.fromRGB(0, 190, 255), "[SYSTEM]")
